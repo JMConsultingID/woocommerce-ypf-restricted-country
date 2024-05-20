@@ -13,17 +13,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Add filter to restrict countries
 add_filter( 'woocommerce_countries', 'ypf_restricted_woocommerce_countries' );
 function ypf_restricted_woocommerce_countries( $countries ) {
-    $remove_countries = get_option( 'ypf_restricted_countries', array('BE','CA','CU','FR','IR','JP','KP','KR','LB','LY','MM','PK','SO','SD','SY','US','UM') );
+    $remove_countries = get_option( 'ypf_restricted_countries', array() );
     foreach ( $remove_countries as $country_code ) {
         unset( $countries[ $country_code ] );
     }
     return $countries;
 }
 
-// Add menu item for plugin settings
+// Add submenu item for plugin settings under WooCommerce menu
 add_action( 'admin_menu', 'ypf_restricted_country_menu' );
 function ypf_restricted_country_menu() {
-    add_menu_page( 'Restricted Countries', 'Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page', 'dashicons-admin-site', 56 );
+    add_submenu_page( 'woocommerce', 'Restricted Countries', 'Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page' );
 }
 
 // Display settings page
