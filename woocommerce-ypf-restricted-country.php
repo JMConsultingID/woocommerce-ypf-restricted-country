@@ -80,5 +80,4 @@ function ypf_restricted_countries_field_callback() {
         ?>
     </p>
     <?php
-    <?php
 }
