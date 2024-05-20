@@ -67,5 +67,11 @@ function ypf_restricted_countries_field_callback() {
             </option>
         <?php endforeach; ?>
     </select>
+    <h3>Selected Countries:</h3>
+    <ul>
+        <?php foreach ( $selected_countries as $country_code ) : ?>
+            <li><?php echo esc_html( '(' . $country_code . ') ' . $countries[ $country_code ] ); ?></li>
+        <?php endforeach; ?>
+    </ul>
     <?php
 }
