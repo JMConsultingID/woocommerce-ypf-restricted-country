@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: Woocommerce YPF Restricted Country
- * Description: Plugin untuk membatasi negara tertentu pada WooCommerce.
- * Version: 1.0
- * Author: Your Name
+ * Description: Plugin to restrict specific countries on WooCommerce.
+ * Version: 1.0.1
+ * Author: Ardi FinPR
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,7 +29,7 @@ function ypf_restricted_woocommerce_countries( $countries ) {
 // Add submenu item for plugin settings under WooCommerce menu
 add_action( 'admin_menu', 'ypf_restricted_country_menu' );
 function ypf_restricted_country_menu() {
-    add_submenu_page( 'woocommerce', 'Restricted Countries', 'Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page' );
+    add_submenu_page( 'woocommerce', 'YPF Restricted Countries', 'YPF Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page' );
 }
 
 // Display settings page
