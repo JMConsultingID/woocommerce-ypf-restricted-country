@@ -72,10 +72,13 @@ function ypf_restricted_countries_field_callback() {
         <?php 
         $selected_country_list = array();
         foreach ( $selected_countries as $country_code ) {
-            $selected_country_list[] = '(' . $country_code . ') ' . $countries[ $country_code ];
+            if ( isset( $countries[ $country_code ] ) ) {
+                $selected_country_list[] = '(' . $country_code . ') ' . $countries[ $country_code ];
+            }
         }
         echo implode(', ', $selected_country_list);
         ?>
-    </p
+    </p>
+    <?php
     <?php
 }
