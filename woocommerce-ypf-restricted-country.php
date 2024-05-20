@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: Woocommerce YPF Restricted Country
- * Description: Plugin to restrict specific countries on WooCommerce.
- * Version: 1.0.1
- * Author: Ardi FinPR
+ * Description: Plugin untuk membatasi negara tertentu pada WooCommerce.
+ * Version: 1.0
+ * Author: Your Name
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -48,7 +48,11 @@ function ypf_restricted_country_page() {
 // Register settings, section, and fields
 add_action( 'admin_init', 'ypf_restricted_country_settings' );
 function ypf_restricted_country_settings() {
-    register_setting( 'ypf_restricted_country_group', 'ypf_restricted_countries' );
+    register_setting( 'ypf_restricted_country_group', 'ypf_restricted_countries', array(
+        'type' => 'array',
+        'sanitize_callback' => 'ypf_sanitize_countries',
+        'default' => array()
+    ));
 
     add_settings_section( 'ypf_restricted_country_section', 'Set Restricted Countries', 'ypf_restricted_country_section_callback', 'ypf-restricted-country' );
 
@@ -75,9 +79,20 @@ function ypf_restricted_countries_field_callback() {
     </select>
     <h3>Selected Countries:</h3>
     <p>
-        <?php foreach ( $selected_countries as $country_code ) : ?>
-            <?php echo esc_html( '(' . $country_code . ') ' ); ?>,
-        <?php endforeach; ?>
+        <?php 
+        $selected_country_list = array();
+        foreach ( $selected_countries as $country_code ) {
+            if ( isset( $countries[ $country_code ] ) ) {
+                $selected_country_list[] = '(' . $country_code . ') ' . $countries[ $country_code ];
+            }
+        }
+        echo implode(', ', $selected_country_list);
+        ?>
     </p>
     <?php
+}
+
+function ypf_sanitize_countries( $input ) {
+    // Ensure the input is an array and sanitize each element
+    return array_map( 'sanitize_text_field', (array) $input );
 }
