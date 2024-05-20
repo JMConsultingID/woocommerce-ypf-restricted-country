@@ -10,16 +10,41 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
 
-// Add filter to restrict countries
+// Create custom table on plugin activation
+register_activation_hook( __FILE__, 'ypf_create_restricted_countries_table' );
+function ypf_create_restricted_countries_table() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'ypf_restricted_countries';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        country_code char(2) NOT NULL,
+        PRIMARY KEY  (id),
+        UNIQUE KEY country_code (country_code)
+    ) $charset_collate;";
+
+    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+    dbDelta( $sql );
+}
+
+// Add filter to restrict countries in frontend
 add_filter( 'woocommerce_countries', 'ypf_restricted_woocommerce_countries' );
 function ypf_restricted_woocommerce_countries( $countries ) {
-    $remove_countries = get_option( 'ypf_restricted_countries', array() );
-    if ( ! is_array( $remove_countries ) ) {
-        $remove_countries = array();
+    if ( is_admin() ) {
+        return $countries; // Do not modify countries in admin
     }
-    foreach ( $remove_countries as $country_code ) {
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'ypf_restricted_countries';
+
+    $restricted_countries = $wpdb->get_col( "SELECT country_code FROM $table_name" );
+
+    foreach ( $restricted_countries as $country_code ) {
         unset( $countries[ $country_code ] );
     }
+
     return $countries;
 }
 
@@ -34,74 +59,50 @@ function ypf_restricted_country_page() {
     ?>
     <div class="wrap">
         <h1>Restricted Countries</h1>
-        <form method="post" action="options.php">
+        <form method="post" action="">
             <?php
-            settings_fields( 'ypf_restricted_country_group' );
-            do_settings_sections( 'ypf-restricted-country' );
-            submit_button();
+            ypf_save_restricted_countries();
+            $countries = WC()->countries->get_countries();
+            $selected_countries = ypf_get_restricted_countries();
             ?>
+            <select multiple="multiple" name="ypf_restricted_countries[]" style="width: 100%; height: 200px;">
+                <?php foreach ( $countries as $country_code => $country_name ) : ?>
+                    <option value="<?php echo esc_attr( $country_code ); ?>" <?php echo in_array( $country_code, $selected_countries ) ? 'selected' : ''; ?>>
+                        <?php echo esc_html( '(' . $country_code . ') ' . $country_name ); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <?php submit_button( 'Save Changes' ); ?>
         </form>
     </div>
     <?php
 }
 
-// Register settings, section, and fields
-add_action( 'admin_init', 'ypf_restricted_country_settings' );
-function ypf_restricted_country_settings() {
-    register_setting( 'ypf_restricted_country_group', 'ypf_restricted_countries', array(
-        'type' => 'array',
-        'sanitize_callback' => 'ypf_sanitize_countries',
-        'default' => array()
-    ));
+// Save restricted countries to custom table
+function ypf_save_restricted_countries() {
+    if ( isset( $_POST['ypf_restricted_countries'] ) ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ypf_restricted_countries';
 
-    add_settings_section( 'ypf_restricted_country_section', 'Set Restricted Countries', 'ypf_restricted_country_section_callback', 'ypf-restricted-country' );
+        // Clear current restricted countries
+        $wpdb->query( "TRUNCATE TABLE $table_name" );
 
-    add_settings_field( 'ypf_restricted_countries_field', 'Restricted Countries', 'ypf_restricted_countries_field_callback', 'ypf-restricted-country', 'ypf_restricted_country_section' );
-}
-
-function ypf_restricted_country_section_callback() {
-    echo 'Select the countries you want to restrict from WooCommerce.';
-}
-
-function ypf_restricted_countries_field_callback() {
-    $countries = WC()->countries->get_countries();
-    $selected_countries = get_option( 'ypf_restricted_countries', array() );
-    if ( ! is_array( $selected_countries ) ) {
-        $selected_countries = array();
+        // Insert new restricted countries
+        $restricted_countries = $_POST['ypf_restricted_countries'];
+        foreach ( $restricted_countries as $country_code ) {
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'country_code' => sanitize_text_field( $country_code ),
+                )
+            );
+        }
     }
-    ?>
-    <div id="ypf-restricted-countries-container">
-        <?php foreach ( $selected_countries as $country_code ) : ?>
-            <div class="ypf-restricted-country">
-                <select name="ypf_restricted_countries[]" style="width: 80%; display: inline-block;">
-                    <?php foreach ( $countries as $code => $name ) : ?>
-                        <option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
-                            <?php echo esc_html( '(' . $code . ') ' . $name ); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="button" class="button ypf-remove-country" style="display: inline-block;">Remove</button>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    <button type="button" class="button" id="ypf-add-country">Add Country</button>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#ypf-add-country').on('click', function() {
-            var $container = $('#ypf-restricted-countries-container');
-            var $template = $('<div class="ypf-restricted-country"><select name="ypf_restricted_countries[]" style="width: 80%; display: inline-block;"><?php foreach ( $countries as $code => $name ) : ?><option value="<?php echo esc_attr( $code ); ?>"><?php echo esc_html( '(' . $code . ') ' . $name ); ?></option><?php endforeach; ?></select><button type="button" class="button ypf-remove-country" style="display: inline-block;">Remove</button></div>');
-            $container.append($template);
-        });
-
-        $(document).on('click', '.ypf-remove-country', function() {
-            $(this).closest('.ypf-restricted-country').remove();
-        });
-    });
-    </script>
-    <?php
 }
 
-function ypf_sanitize_countries( $input ) {
-    // Ensure the input is an array and sanitize each element
-    return array_map( 'sanitize_text_field', (array) $input );
+// Get restricted countries from custom table
+function ypf_get_restricted_countries() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'ypf_restricted_countries';
+    return $wpdb->get_col( "SELECT country_code FROM $table_name" );
 }
