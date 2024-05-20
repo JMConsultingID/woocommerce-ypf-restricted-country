@@ -23,7 +23,7 @@ function ypf_restricted_woocommerce_countries( $countries ) {
 // Add submenu item for plugin settings under WooCommerce menu
 add_action( 'admin_menu', 'ypf_restricted_country_menu' );
 function ypf_restricted_country_menu() {
-    add_submenu_page( 'woocommerce', 'Restricted Countries', 'Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page' );
+    add_submenu_page( 'woocommerce', 'YPF Restricted Countries', 'YPF Restricted Countries', 'manage_options', 'ypf-restricted-country', 'ypf_restricted_country_page' );
 }
 
 // Display settings page
@@ -63,7 +63,7 @@ function ypf_restricted_countries_field_callback() {
     <select multiple="multiple" name="ypf_restricted_countries[]" style="width: 100%; height: 200px;">
         <?php foreach ( $countries as $country_code => $country_name ) : ?>
             <option value="<?php echo esc_attr( $country_code ); ?>" <?php echo in_array( $country_code, $selected_countries ) ? 'selected' : ''; ?>>
-                <?php echo esc_html( $country_name ); ?>
+                <?php echo esc_html( '(' . $country_code . ') ' . $country_name ); ?>
             </option>
         <?php endforeach; ?>
     </select>
