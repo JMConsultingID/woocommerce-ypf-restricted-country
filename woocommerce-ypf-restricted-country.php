@@ -48,11 +48,7 @@ function ypf_restricted_country_page() {
 // Register settings, section, and fields
 add_action( 'admin_init', 'ypf_restricted_country_settings' );
 function ypf_restricted_country_settings() {
-    register_setting( 'ypf_restricted_country_group', 'ypf_restricted_countries', array(
-        'type' => 'array',
-        'sanitize_callback' => 'ypf_sanitize_countries',
-        'default' => array()
-    ));
+    register_setting( 'ypf_restricted_country_group', 'ypf_restricted_countries' );
 
     add_settings_section( 'ypf_restricted_country_section', 'Set Restricted Countries', 'ypf_restricted_country_section_callback', 'ypf-restricted-country' );
 
@@ -84,9 +80,4 @@ function ypf_restricted_countries_field_callback() {
         <?php endforeach; ?>
     </p>
     <?php
-}
-
-function ypf_sanitize_countries( $input ) {
-    // Ensure the input is an array and sanitize each element
-    return array_map( 'sanitize_text_field', (array) $input );
 }
