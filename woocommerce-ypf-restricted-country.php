@@ -70,25 +70,34 @@ function ypf_restricted_countries_field_callback() {
         $selected_countries = array();
     }
     ?>
-    <select multiple="multiple" name="ypf_restricted_countries[]" style="width: 100%; height: 200px;">
-        <?php foreach ( $countries as $country_code => $country_name ) : ?>
-            <option value="<?php echo esc_attr( $country_code ); ?>" <?php echo in_array( $country_code, $selected_countries ) ? 'selected' : ''; ?>>
-                <?php echo esc_html( '(' . $country_code . ') ' . $country_name ); ?>
-            </option>
+    <div id="ypf-restricted-countries-container">
+        <?php foreach ( $selected_countries as $country_code ) : ?>
+            <div class="ypf-restricted-country">
+                <select name="ypf_restricted_countries[]" style="width: 80%; display: inline-block;">
+                    <?php foreach ( $countries as $code => $name ) : ?>
+                        <option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
+                            <?php echo esc_html( '(' . $code . ') ' . $name ); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="button" class="button ypf-remove-country" style="display: inline-block;">Remove</button>
+            </div>
         <?php endforeach; ?>
-    </select>
-    <h3>Selected Countries:</h3>
-    <p>
-        <?php 
-        $selected_country_list = array();
-        foreach ( $selected_countries as $country_code ) {
-            if ( isset( $countries[ $country_code ] ) ) {
-                $selected_country_list[] = '(' . $country_code . ') ' . $countries[ $country_code ];
-            }
-        }
-        echo implode(', ', $selected_country_list);
-        ?>
-    </p>
+    </div>
+    <button type="button" class="button" id="ypf-add-country">Add Country</button>
+    <script>
+    jQuery(document).ready(function($) {
+        $('#ypf-add-country').on('click', function() {
+            var $container = $('#ypf-restricted-countries-container');
+            var $template = $('<div class="ypf-restricted-country"><select name="ypf_restricted_countries[]" style="width: 80%; display: inline-block;"><?php foreach ( $countries as $code => $name ) : ?><option value="<?php echo esc_attr( $code ); ?>"><?php echo esc_html( '(' . $code . ') ' . $name ); ?></option><?php endforeach; ?></select><button type="button" class="button ypf-remove-country" style="display: inline-block;">Remove</button></div>');
+            $container.append($template);
+        });
+
+        $(document).on('click', '.ypf-remove-country', function() {
+            $(this).closest('.ypf-restricted-country').remove();
+        });
+    });
+    </script>
     <?php
 }
 
